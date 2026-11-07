@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contact QR Generator</title>
+<meta name="description" content="Create a QR code that saves your contact straight to any phone — no website, no app.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+<style>
+  :root{
+    --bg:#f4f5fb; --panel:#ffffff; --ink:#151827; --muted:#646a86; --line:#e3e5f0;
+    --accent:#4f46e5; --accent2:#0d9488; --field:#f8f9fd; --shadow:0 10px 40px rgba(30,30,80,.08);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0e1020; --panel:#171a2e; --ink:#eef0fa; --muted:#9aa0bf; --line:#2a2e48;
+      --field:#1f2340; --shadow:0 10px 40px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0e1020; --panel:#171a2e; --ink:#eef0fa; --muted:#9aa0bf; --line:#2a2e48;
+    --field:#1f2340; --shadow:0 10px 40px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html,body{margin:0}
+  body{background:var(--bg);color:var(--ink);font-family:"Plus Jakarta Sans",system-ui,sans-serif;line-height:1.5}
+  header{max-width:1180px;margin:0 auto;padding:36px 16px 8px}
+  header h1{margin:0;font-size:clamp(26px,4vw,38px);font-weight:800;letter-spacing:-.02em}
+  header h1 span{background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  header p{margin:6px 0 0;color:var(--muted);max-width:640px}
+  main{max-width:1180px;margin:0 auto;padding:20px 16px 48px;display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:24px;align-items:start}
+  @media (max-width:960px){main{grid-template-columns:1fr}.preview-col{order:-1}}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:var(--shadow)}
+  .panel+.panel{margin-top:20px}
+  .panel h2{margin:0 0 4px;font-size:17px;font-weight:700}
+  .panel .sub{margin:0 0 16px;color:var(--muted);font-size:13.5px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:560px){.grid{grid-template-columns:1fr}}
+  .full{grid-column:1/-1}
+  label{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:6px;letter-spacing:.01em}
+  input[type=text],input[type=tel],input[type=email],select{
+    width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:11px;background:var(--field);
+    color:var(--ink);font:inherit;font-size:14.5px;outline:none;transition:border-color .15s, box-shadow .15s}
+  input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 20%,transparent)}
+  .phone{display:flex;gap:8px}
+  .phone select{width:112px;flex:none}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{border:1px solid var(--line);background:var(--field);color:var(--ink);padding:8px 12px;border-radius:999px;
+    font:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+  .chip:hover{border-color:var(--accent)}
+  .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+  .themes{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:10px}
+  .theme{height:52px;border-radius:12px;border:2px solid transparent;cursor:pointer;position:relative;padding:0}
+  .theme[aria-pressed="true"]{border-color:var(--ink)}
+  .theme span{position:absolute;inset:auto 0 -20px;font-size:11px;color:var(--muted);font-weight:600}
+  .themes{padding-bottom:18px}
+  .color-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .color{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--field);padding:6px 10px 6px 6px;border-radius:11px}
+  .color input{width:30px;height:30px;border:none;border-radius:8px;padding:0;background:none;cursor:pointer}
+  .color input::-webkit-color-swatch-wrapper{padding:0}.color input::-webkit-color-swatch{border:none;border-radius:7px}
+  .color small{font-size:12.5px;font-weight:600;color:var(--muted)}
+  .toggle{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;cursor:pointer;user-select:none}
+  .toggle input{accent-color:var(--accent);width:17px;height:17px}
+  .logo-drop{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:12px;padding:12px 16px;
+    font:inherit;font-weight:700;font-size:14px;cursor:pointer;transition:transform .1s, opacity .15s}
+  .btn:active{transform:scale(.98)}
+  .btn.primary{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff}
+  .btn.ghost{background:var(--field);color:var(--ink);border:1px solid var(--line)}
+  .btn.small{padding:8px 12px;font-size:13px;border-radius:10px}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .preview-col{position:sticky;top:20px}
+  @media (max-width:960px){.preview-col{position:static}}
+  .card{border-radius:22px;padding:28px 22px 22px;text-align:center;color:#fff;overflow:hidden}
+  .card .nm{font-size:24px;font-weight:800;letter-spacing:-.01em;margin:0;word-break:break-word}
+  .card .ds{font-size:14px;opacity:.88;margin:2px 0 0;min-height:1em}
+  .qr-box{background:#fff;border-radius:18px;padding:16px;margin:20px auto 16px;width:fit-content;max-width:100%}
+  .qr-box canvas,.qr-box svg{display:block;max-width:100%;height:auto}
+  .qr-box{position:relative}
+  .qr-box.empty #qr{opacity:.12;filter:grayscale(1)}
+  .qr-box .empty-msg{display:none;position:absolute;inset:0;align-items:center;justify-content:center;color:#646a86;font-weight:700;font-size:14px;padding:20px}
+  .qr-box.empty .empty-msg{display:flex}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .card .hint{font-size:13px;font-weight:600;opacity:.9}
+  .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+  .actions .full{grid-column:1/-1}
+  .note{font-size:12.5px;color:var(--muted);margin:14px 2px 0}
+  .warn{font-size:12.5px;color:#b45309;margin:8px 0 0;display:none}
+  .theme-toggle{position:absolute;top:16px;right:16px}
+  footer{text-align:center;color:var(--muted);font-size:12.5px;padding:0 16px 32px}
+  .credit{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);max-width:1148px;margin-left:auto;margin-right:auto;font-size:13.5px}
+  .credit a{display:inline-flex;align-items:center;gap:6px;color:#0a66c2;font-weight:700;text-decoration:none;margin-left:4px}
+  .credit a:hover{text-decoration:underline}
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .credit a{color:#70b5f9}}
+  :root[data-theme="dark"] .credit a{color:#70b5f9}
+</style>
+</head>
+<body>
+<button class="btn ghost small theme-toggle" id="themeToggle" aria-label="Toggle dark mode"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+<header>
+  <h1>Contact <span>QR Generator</span></h1>
+  <p>Fill in your details and style your code. Anyone who scans it gets an "Add to Contacts" prompt on iPhone or Android, with no website or internet needed.</p>
+</header>
+
+<main>
+  <section>
+    <div class="panel">
+      <h2>Your details</h2>
+      <p class="sub">Only the name and phone number are required.</p>
+      <div class="grid">
+        <div class="full">
+          <label for="name">Full name *</label>
+          <input type="text" id="name" placeholder="e.g. Priya Sharma" autocomplete="name">
+        </div>
+        <div class="full">
+          <label for="phone">Contact number *</label>
+          <div class="phone">
+            <select id="cc" aria-label="Country code">
+              <option value="+91" selected>🇮🇳 +91</option>
+              <option value="+1">🇺🇸 +1</option>
+              <option value="+44">🇬🇧 +44</option>
+              <option value="+971">🇦🇪 +971</option>
+              <option value="+65">🇸🇬 +65</option>
+              <option value="+61">🇦🇺 +61</option>
+              <option value="+49">🇩🇪 +49</option>
+              <option value="+966">🇸🇦 +966</option>
+              <option value="+60">🇲🇾 +60</option>
+              <option value="+94">🇱🇰 +94</option>
+              <option value="">Other</option>
+            </select>
+            <input type="tel" id="phone" placeholder="98765 43210" autocomplete="tel-national">
+          </div>
+        </div>
+        <div>
+          <label for="email">Email</label>
+          <input type="email" id="email" placeholder="name@company.com" autocomplete="email">
+        </div>
+        <div>
+          <label for="company">Company name</label>
+          <input type="text" id="company" placeholder="e.g. Acme Pvt Ltd" autocomplete="organization">
+        </div>
+        <div class="full">
+          <label for="title">Designation</label>
+          <input type="text" id="title" placeholder="e.g. Sales Manager" autocomplete="organization-title">
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Colour theme</h2>
+      <p class="sub">Pick a preset, then fine-tune the colours below if you like.</p>
+      <div class="themes" id="themes"></div>
+      <div class="color-row" style="margin-top:6px">
+        <div class="color"><input type="color" id="c1" value="#4338ca"><small>QR colour</small></div>
+        <div class="color" id="c2wrap"><input type="color" id="c2" value="#0d9488"><small>Gradient end</small></div>
+        <label class="toggle"><input type="checkbox" id="useGrad" checked> Gradient</label>
+      </div>
+      <div class="color-row" style="margin-top:12px">
+        <div class="color"><input type="color" id="b1" value="#312e81"><small>Card top</small></div>
+        <div class="color"><input type="color" id="b2" value="#0f766e"><small>Card bottom</small></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>QR shape</h2>
+      <p class="sub">Change how the dots and corners look.</p>
+      <label>Dot style</label>
+      <div class="chips" data-group="dots">
+        <button class="chip" data-v="square">Square</button>
+        <button class="chip" data-v="dots">Dots</button>
+        <button class="chip" data-v="rounded" aria-pressed="true">Rounded</button>
+        <button class="chip" data-v="extra-rounded">Extra rounded</button>
+        <button class="chip" data-v="classy">Classy</button>
+        <button class="chip" data-v="classy-rounded">Classy rounded</button>
+      </div>
+      <label style="margin-top:16px">Corner frame</label>
+      <div class="chips" data-group="cornerSq">
+        <button class="chip" data-v="square">Square</button>
+        <button class="chip" data-v="extra-rounded" aria-pressed="true">Rounded</button>
+        <button class="chip" data-v="dot">Circle</button>
+      </div>
+      <label style="margin-top:16px">Corner centre</label>
+      <div class="chips" data-group="cornerDot">
+        <button class="chip" data-v="square">Square</button>
+        <button class="chip" data-v="dot" aria-pressed="true">Circle</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Logo &amp; card</h2>
+      <p class="sub">Add a logo in the middle of the code (PNG, JPG or SVG).</p>
+      <div class="logo-drop">
+        <input type="file" id="logo" accept="image/*" hidden>
+        <button class="btn ghost small" id="logoBtn">Upload logo</button>
+        <button class="btn ghost small" id="logoClear" hidden>Remove logo</button>
+        <span id="logoName" class="note" style="margin:0"></span>
+      </div>
+      <div style="margin-top:16px">
+        <label for="logoSize">Logo size</label>
+        <input type="range" id="logoSize" min="0.2" max="0.45" step="0.01" value="0.32">
+      </div>
+      <div class="grid" style="margin-top:12px">
+        <div class="full">
+          <label for="hintText">Text under the code</label>
+          <input type="text" id="hintText" value="Scan to save contact">
+        </div>
+        <label class="toggle"><input type="checkbox" id="showNumber" checked> Show phone number on card</label>
+        <label class="toggle"><input type="checkbox" id="showCard" checked> Show card around QR</label>
+      </div>
+    </div>
+  </section>
+
+  <aside class="preview-col">
+    <div class="panel">
+      <div class="card" id="card">
+        <p class="nm" id="pName">Your Name</p>
+        <p class="ds" id="pSub"></p>
+        <div class="qr-box empty" id="qrBox"><div id="qr"></div><div class="empty-msg">Enter your name and number to create your QR</div></div>
+        <div class="hint" id="pHint">Scan to save contact</div>
+      </div>
+      <p class="warn" id="warn">Add a name and phone number to make the code work.</p>
+      <p class="warn" id="contrastWarn">This QR colour is quite light, so some phones may struggle to scan it. Try a darker shade.</p>
+      <div class="actions">
+        <button class="btn primary full" id="dlCard">Download card (PNG)</button>
+        <button class="btn ghost" id="dlPng">QR only (PNG)</button>
+        <button class="btn ghost" id="dlSvg">QR only (SVG)</button>
+        <button class="btn ghost full" id="dlVcf">Download contact file (.vcf)</button>
+      </div>
+      <p class="note">Everything stays in your browser; nothing is uploaded. Phones always ask the person to tap "Save" before a contact is added.</p>
+    </div>
+  </aside>
+</main>
+<footer>Works with the built-in camera on iPhone and most Android phones (or Google Lens).
+  <div class="credit">Made by <a href="https://www.linkedin.com/in/kavinnr/" target="_blank" rel="noopener"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg>Kavin N R</a></div>
+</footer>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+
+  // ---------- theme toggle (light/dark page) ----------
+  const root = document.documentElement;
+  try{ const t = localStorage.getItem('qr-theme'); if(t) root.dataset.theme = t; }catch(e){}
+  $('themeToggle').onclick = () => {
+    const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+    root.dataset.theme = dark ? 'light' : 'dark';
+    try{ localStorage.setItem('qr-theme', root.dataset.theme); }catch(e){}
+  };
+
+  // ---------- presets ----------
+  const presets = [
+    {n:'Indigo',  c1:'#4338ca', c2:'#0d9488', b1:'#312e81', b2:'#0f766e', g:true},
+    {n:'Sunset',  c1:'#be123c', c2:'#c2410c', b1:'#9f1239', b2:'#ea580c', g:true},
+    {n:'Ocean',   c1:'#0369a1', c2:'#06b6d4', b1:'#0c4a6e', b2:'#0891b2', g:true},
+    {n:'Forest',  c1:'#166534', c2:'#65a30d', b1:'#14532d', b2:'#4d7c0f', g:true},
+    {n:'Royal',   c1:'#7c3aed', c2:'#db2777', b1:'#4c1d95', b2:'#9d174d', g:true},
+    {n:'Gold',    c1:'#1c1917', c2:'#a16207', b1:'#292524', b2:'#a16207', g:true},
+    {n:'Mono',    c1:'#111827', c2:'#111827', b1:'#111827', b2:'#374151', g:false},
+  ];
+  const themesEl = $('themes');
+  presets.forEach((p,i) => {
+    const b = document.createElement('button');
+    b.className = 'theme';
+    b.style.background = `linear-gradient(135deg, ${p.b1}, ${p.b2})`;
+    b.setAttribute('aria-pressed', i===0 ? 'true' : 'false');
+    b.setAttribute('aria-label', p.n + ' theme');
+    b.innerHTML = `<span>${p.n}</span>`;
+    b.onclick = () => {
+      themesEl.querySelectorAll('.theme').forEach(x => x.setAttribute('aria-pressed','false'));
+      b.setAttribute('aria-pressed','true');
+      $('c1').value=p.c1; $('c2').value=p.c2; $('b1').value=p.b1; $('b2').value=p.b2; $('useGrad').checked=p.g;
+      update();
+    };
+    themesEl.appendChild(b);
+  });
+
+  // ---------- chip groups ----------
+  const style = { dots:'rounded', cornerSq:'extra-rounded', cornerDot:'dot' };
+  document.querySelectorAll('.chips').forEach(g => {
+    g.addEventListener('click', e => {
+      const c = e.target.closest('.chip'); if(!c) return;
+      g.querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed','false'));
+      c.setAttribute('aria-pressed','true');
+      style[g.dataset.group] = c.dataset.v;
+      update();
+    });
+  });
+
+  // ---------- logo ----------
+  let logoData = '';
+  $('logoBtn').onclick = () => $('logo').click();
+  $('logo').onchange = e => {
+    const f = e.target.files[0]; if(!f) return;
+    const r = new FileReader();
+    r.onload = () => { logoData = r.result; $('logoName').textContent = f.name; $('logoClear').hidden = false; update(); };
+    r.readAsDataURL(f);
+  };
+  $('logoClear').onclick = () => { logoData=''; $('logo').value=''; $('logoName').textContent=''; $('logoClear').hidden=true; update(); };
+
+  // ---------- vCard ----------
+  const esc = s => String(s).replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;');
+  function fullPhone(){
+    const raw = $('phone').value.trim();
+    if(!raw) return '';
+    if(raw.startsWith('+')) return raw.replace(/[^\d+]/g,'');
+    return ($('cc').value + raw.replace(/^0+/,'')).replace(/[^\d+]/g,'');
+  }
+  function prettyPhone(){
+    const raw = $('phone').value.trim();
+    if(!raw) return '';
+    return raw.startsWith('+') ? raw : ($('cc').value ? $('cc').value + ' ' : '') + raw;
+  }
+  function vcard(){
+    const name = $('name').value.trim().replace(/\s+/g,' ');
+    const parts = name.split(' ');
+    const last = parts.length > 1 ? parts.pop() : '';
+    const first = parts.join(' ');
+    const L = ['BEGIN:VCARD','VERSION:3.0',
+      `N:${esc(last)};${esc(first)};;;`, `FN:${esc(name)}`];
+    const tel = fullPhone(); if(tel) L.push(`TEL;TYPE=CELL:${tel}`);
+    const em = $('email').value.trim(); if(em) L.push(`EMAIL;TYPE=WORK:${esc(em)}`);
+    const org = $('company').value.trim(); if(org) L.push(`ORG:${esc(org)}`);
+    const t = $('title').value.trim(); if(t) L.push(`TITLE:${esc(t)}`);
+    L.push('END:VCARD');
+    return L.join('\n');
+  }
+
+  // ---------- QR ----------
+  const SIZE = 300;
+  function qrOptions(size){
+    const grad = $('useGrad').checked;
+    const color = grad
+      ? { gradient:{ type:'linear', rotation:Math.PI/2, colorStops:[{offset:0,color:$('c1').value},{offset:1,color:$('c2').value}] } }
+      : { color:$('c1').value };
+    return {
+      width:size, height:size, type:'canvas', data:vcard(), margin:0,
+      image: logoData || undefined,
+      qrOptions:{ errorCorrectionLevel: logoData ? 'H' : 'Q' },
+      dotsOptions:{ type:style.dots, ...color },
+      cornersSquareOptions:{ type:style.cornerSq, ...(grad ? {color:$('c1').value} : color) },
+      cornersDotOptions:{ type:style.cornerDot, ...(grad ? {color:$('c1').value} : color) },
+      backgroundOptions:{ color:'#ffffff' },
+      imageOptions:{ crossOrigin:'anonymous', margin:6, imageSize:+$('logoSize').value, hideBackgroundDots:true }
+    };
+  }
+  const qr = new QRCodeStyling(qrOptions(SIZE));
+  qr.append($('qr'));
+
+  function update(){
+    const name = $('name').value.trim();
+    const ok = name && fullPhone();
+    $('warn').style.display = 'none';
+    $('qrBox').classList.toggle('empty', !ok);
+    ['dlCard','dlPng','dlSvg','dlVcf'].forEach(id => $(id).disabled = !ok);
+    const lum = h => { const v=[1,3,5].map(i=>parseInt(h.substr(i,2),16)/255).map(c=>c<=.03928?c/12.92:Math.pow((c+.055)/1.055,2.4)); return .2126*v[0]+.7152*v[1]+.0722*v[2]; };
+    const cols = [$('c1').value].concat($('useGrad').checked ? [$('c2').value] : []);
+    $('contrastWarn').style.display = cols.some(c => 1.05/(lum(c)+.05) < 3.5) ? 'block' : 'none';
+    $('c2wrap').style.opacity = $('useGrad').checked ? 1 : .4;
+    $('pName').textContent = name || 'Your Name';
+    const sub = [];
+    const t = $('title').value.trim(), co = $('company').value.trim();
+    if(t || co) sub.push([t, co].filter(Boolean).join(' · '));
+    if($('showNumber').checked && prettyPhone()) sub.push(prettyPhone());
+    $('pSub').innerHTML = sub.map(s => s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))).join('<br>');
+    $('pHint').textContent = $('hintText').value;
+    const card = $('card');
+    if($('showCard').checked){
+      card.style.background = `linear-gradient(180deg, ${$('b1').value}, ${$('b2').value})`;
+      card.style.color = '#fff';
+      card.querySelectorAll('.nm,.ds,.hint').forEach(e => e.style.display = '');
+    } else {
+      card.style.background = 'transparent';
+      card.querySelectorAll('.nm,.ds,.hint').forEach(e => e.style.display = 'none');
+    }
+    qr.update(qrOptions(SIZE));
+  }
+
+  ['name','phone','cc','email','company','title','c1','c2','b1','b2','useGrad','logoSize','hintText','showNumber','showCard']
+    .forEach(id => $(id).addEventListener('input', update));
+
+  // ---------- downloads ----------
+  const fileBase = () => ($('name').value.trim() || 'contact').replace(/[^\w\- ]+/g,'').replace(/\s+/g,'_') ;
+  function save(blob, filename){
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  }
+  async function hiResQR(size, ext, quiet){
+    const q = new QRCodeStyling({...qrOptions(size), type: ext === 'svg' ? 'svg' : 'canvas', margin: quiet ? Math.round(size*0.06) : 0});
+    return q.getRawData(ext);
+  }
+  $('dlPng').onclick = async () => save(await hiResQR(1200,'png',true), fileBase() + '_QR.png');
+  $('dlSvg').onclick = async () => save(await hiResQR(1200,'svg',true), fileBase() + '_QR.svg');
+  $('dlVcf').onclick = () => save(new Blob([vcard().replace(/\n/g,'\r\n')],{type:'text/vcard'}), fileBase() + '.vcf');
+
+  function wrapLines(ctx, text, maxW){
+    const words = text.split(' '); const lines = []; let line = '';
+    words.forEach(w => { const t = line ? line + ' ' + w : w; if(ctx.measureText(t).width > maxW && line){ lines.push(line); line = w; } else line = t; });
+    if(line) lines.push(line); return lines;
+  }
+  function roundRect(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+
+  $('dlCard').onclick = async () => {
+    await document.fonts.ready;
+    const W = 1200, pad = 90, qs = 760, boxPad = 50;
+    const blob = await hiResQR(qs,'png');
+    const img = await createImageBitmap(blob);
+    const showCard = $('showCard').checked;
+    const c = document.createElement('canvas'); const ctx = c.getContext('2d');
+    const F = '"Plus Jakarta Sans", system-ui, sans-serif';
+
+    if(!showCard){
+      c.width = qs + boxPad*2; c.height = qs + boxPad*2;
+      ctx.fillStyle = '#fff'; ctx.fillRect(0,0,c.width,c.height);
+      ctx.drawImage(img, boxPad, boxPad, qs, qs);
+    } else {
+      ctx.font = `800 76px ${F}`;
+      const nameLines = wrapLines(ctx, $('pName').textContent, W - pad*2);
+      const subs = $('pSub').innerHTML ? $('pSub').innerText.split('\n').filter(Boolean) : [];
+      const hint = $('hintText').value.trim();
+      let H = pad + nameLines.length*90 + subs.length*58 + 60 + qs + boxPad*2 + (hint ? 110 : 40) + pad - 30;
+      c.width = W; c.height = H;
+      const g = ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,$('b1').value); g.addColorStop(1,$('b2').value);
+      ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillStyle = '#fff';
+      let y = pad;
+      ctx.font = `800 76px ${F}`;
+      nameLines.forEach(l => { ctx.fillText(l, W/2, y); y += 90; });
+      ctx.font = `500 42px ${F}`; ctx.globalAlpha = .9;
+      subs.forEach(s => { ctx.fillText(s, W/2, y + 4); y += 58; });
+      ctx.globalAlpha = 1; y += 60;
+      const x = (W - qs)/2;
+      ctx.fillStyle = '#fff'; roundRect(ctx, x-boxPad, y, qs+boxPad*2, qs+boxPad*2, 48); ctx.fill();
+      ctx.drawImage(img, x, y+boxPad, qs, qs);
+      y += qs + boxPad*2 + 50;
+      if(hint){ ctx.font = `600 44px ${F}`; ctx.fillStyle = '#fff'; ctx.globalAlpha=.95; ctx.fillText(hint, W/2, y); }
+    }
+    c.toBlob(b => save(b, fileBase() + '_Contact_Card.png'), 'image/png');
+  };
+
+  update();
+})();
+</script>
+</body>
+</html>
